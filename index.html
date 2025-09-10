@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سويجات - متجر</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <header class="site-header">
+        <div class="brand">
+            <h1>سويجات</h1>
+            <p class="tag">تسوّق بطابع مستقبلي</p>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#home">الرئيسية</a></li>
+                <li><a href="#products">المنتجات</a></li>
+                <li><a href="#contact">اتصل بنا</a></li>
+            </ul>
+        </nav>
+
+        <!-- زر عربة التسوق يفتح نافذة (modal) بدلاً من صفحة منفصلة -->
+        <button id="header-cart-btn" class="header-cart" title="عربة التسوق" aria-label="عرض عربة التسوق">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M3 3h2l.4 2M7 13h10l3-8H6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="10" cy="20" r="1" fill="currentColor"/><circle cx="18" cy="20" r="1" fill="currentColor"/>
+            </svg>
+            <span id="cart-count" class="cart-badge">0</span>
+        </button>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <h2 class="hero-title">تجربة سويجات المستقبلية</h2>
+            <p class="hero-sub">واجهة سلسة وممتعة بتأثيرات Web3 لعرض السويجات</p>
+        </section>
+
+        <section id="products" class="products-section">
+            <h2>منتجاتنا</h2>
+            <div class="product-list">
+                <!-- مثال بطاقة منتج محدثة مع عداد وعربة -->
+                <article class="product-card" data-id="1" data-price="20000">
+                    <img src="swich2.png" alt="سويجة 1" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج ثلاثي</h3>
+                        <p class="price">20,000 د.ع</p>
+                    </div>
+
+                    <!-- عناصر التحكم: عداد و زر إضافة للعربة -->
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+
+                <!-- كرّر البنية لكل منتج مع تغيير data-id و data-price و النصوص -->
+                <article class="product-card" data-id="2" data-price="15000">
+                    <img src="swich3.png" alt="سويجة 2" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج احادي</h3>
+                        <p class="price">15,000 د.ع</p>
+                    </div>
+                    <div class="card-controls">
+                        <div class="qty-control">
+                            <button class="qty-btn qty-decrease">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+
+                <article class="product-card" data-id="3" data-price="25000">
+                    <img src="swich4.png" alt="سويجة 3" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج رباعي</h3>
+                        <p class="price">25,000 د.ع</p>
+                    </div>
+                    <div class="card-controls">
+                        <div class="qty-control">
+                            <button class="qty-btn qty-decrease">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+
+                <article class="product-card" data-id="4" data-price="20000">
+                    <img src="swich5.png" alt="سويجة 4" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج ثلاثي</h3>
+                        <p class="price">20,000 د.ع</p>
+                    </div>
+                    <div class="card-controls">
+                        <div class="qty-control">
+                            <button class="qty-btn qty-decrease">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+
+                <article class="product-card" data-id="5" data-price="20000">
+                    <img src="swich6.png" alt="سويجة 5" loading="lazy">
+                    <div class="card-body">
+                        <h3>13Aبلك سويج</h3>
+                        <p class="price">20,000 د.ع</p>
+                    </div>
+                    <div class="card-controls">
+                        <div class="qty-control">
+                            <button class="qty-btn qty-decrease">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <h2>اتصل بنا</h2>
+            <p>لديك استفسار؟ راسلنا وسنرد في أقرب وقت.</p>
+        </section>
+    </main>
+
+    <!-- شريط التوافق (أسفل الصفحة) -->
+    <section class="compatibility-bar" aria-label="التوافق">
+        <div class="compat-inner">
+            <div class="compat-text">تتوافق هذه السويجات مع</div>
+            <div class="compat-icons">
+                <img src="alexa.png" alt="التحكم عبر أليكسا" loading="lazy">
+                <img src="googlehome.png" alt="التحكم عبر Google Home" loading="lazy">
+                <img src="smartlife.png" alt="تطبيق Smart Life" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>جميع الحقوق محفوظة &copy; <span id="year"></span> سويجات</p>
+    </footer>
+
+    <!-- نافذة عربة التسوق (modal) -->
+    <div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+    <aside id="cart-modal" class="cart-modal" role="dialog" aria-label="عربة التسوق" aria-hidden="true">
+        <div class="cart-modal-header">
+            <h3>عربة التسوق</h3>
+            <button id="cart-close" class="cart-close" aria-label="إغلاق">✕</button>
+        </div>
+        <div id="cart-modal-content" class="cart-modal-content">
+            <!-- المحتوى يُملأ بواسطة js: أسماء المنتجات، الكميات، السعر، والمجموع -->
+        </div>
+    </aside>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

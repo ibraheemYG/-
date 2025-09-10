@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>عربة التسوق — سويجات</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+    <div class="brand"><h1>سويجات</h1></div>
+    <nav><ul><li><a href="index.html">العودة للمتجر</a></li></ul></nav>
+</header>
+
+<main class="cart-page" style="padding:28px;min-height:60vh;">
+    <h2>عربة التسوق</h2>
+    <div id="cart-root" class="cart-root">
+        <!-- سيتم ملؤها بواسطة السكربت -->
+    </div>
+</main>
+
+<footer>
+    <p>جميع الحقوق محفوظة &copy; <span id="year"></span> سويجات</p>
+</footer>
+
+<script>
+function getCart(){ try{ return JSON.parse(localStorage.getItem('swayjat_cart')||'[]'); }catch{return [];} }
+function saveCart(cart){ localStorage.setItem('swayjat_cart', JSON.stringify(cart)); }
+
+function formatCurrency(n){ return n.toLocaleString('en-US') + ' د.ع'; }
+
+function renderCart(){
+    const root = document.getElementById('cart-root');
+    const cart = getCart();
+    root.innerHTML = '';
+    if(cart.length === 0){
+        root.innerHTML = '<p>العربة فارغة. عد إلى المتجر لإضافة منتجات.</p>';
+        return;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'cart-list';
+    let total = 0;
+
+    cart.forEach(item=>{
+        const subtotal = (item.price||0) * (item.qty||0);
+        total += subtotal;
+
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.innerHTML = `
+            <img src="${item.img}" alt="${item.name}" loading="lazy">
+            <div class="cart-meta">
+                <h3>${item.name}</h3>
+                <div class="cart-controls-inline">
+                    <button class="ci-decrease">−</button>
+                    <span class="ci-qty">${item.qty}</span>
+                    <button class="ci-increase">+</button>
+                </div>
+            </div>
+            <div class="cart-price">
+                <div class="item-sub">${formatCurrency(subtotal)}</div>
+                <button class="ci-remove">حذف</button>
+            </div>
+        `;
+        el.dataset.id = item.id;
+        list.appendChild(el);
+    });
+
+    const summary = document.createElement('div');
+    summary.className = 'cart-summary';
+    summary.innerHTML = `
+        <div>إجمالي العناصر: <strong>${cart.reduce((s,i)=>s+(i.qty||0),0)}</strong></div>
+        <div>المجموع: <strong>${formatCurrency(total)}</strong></div>
+        <div style="margin-top:12px;"><button id="checkout-btn" class="add-cart-btn">إتمام الطلب</button></div>
+    `;
+
+    root.appendChild(list);
+    root.appendChild(summary);
+
+    // attach handlers
+    root.querySelectorAll('.ci-increase').forEach(b=>{
+        b.addEventListener('click', e=>{
+            const card = e.target.closest('.cart-item');
+            const id = card.dataset.id;
+            const cart = getCart();
+            const it = cart.find(x=>x.id===id);
+            if(it){ it.qty = Math.min(999, it.qty+1); saveCart(cart); renderCart(); }
+        });
+    });
+    root.querySelectorAll('.ci-decrease').forEach(b=>{
+        b.addEventListener('click', e=>{
+            const card = e.target.closest('.cart-item');
+            const id = card.dataset.id;
+            const cart = getCart();
+            const it = cart.find(x=>x.id===id);
+            if(it){ it.qty = Math.max(1, it.qty-1); saveCart(cart); renderCart(); }
+        });
+    });
+    root.querySelectorAll('.ci-remove').forEach(b=>{
+        b.addEventListener('click', e=>{
+            const card = e.target.closest('.cart-item');
+            const id = card.dataset.id;
+            let cart = getCart();
+            cart = cart.filter(x=>x.id !== id);
+            saveCart(cart); renderCart();
+        });
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+}
+
+document.addEventListener('DOMContentLoaded', renderCart);
+</script>
+
+</body>
+</html>
