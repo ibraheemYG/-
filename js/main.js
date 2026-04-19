@@ -345,10 +345,11 @@ function wrapTextRTL(ctx, text, x, y, maxW, lineH, font, color){
 function loadImageAsync(src){
     return new Promise((resolve) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
         img.onerror = () => resolve(null);
         img.src = src;
+        // Timeout safety
+        setTimeout(() => resolve(null), 5000);
     });
 }
 
@@ -381,15 +382,20 @@ async function generateCatalog(){
             price20: Math.round(price * 0.8),
             desc: card.dataset.description || '',
             category: card.querySelector('.card-category')?.textContent || '',
-            imgSrc: imgEl ? imgEl.src : ''
+            imgSrc: imgEl ? imgEl.src : '',
+            imgEl: imgEl
         };
     });
 
-    // Pre-load all images
+    // Use DOM images directly (already loaded), fallback to re-load
     const imgMap = {};
-    await Promise.all(products.map(async p => {
-        if(p.imgSrc) imgMap[p.imgSrc] = await loadImageAsync(p.imgSrc);
-    }));
+    for(const p of products){
+        if(p.imgEl && p.imgEl.complete && p.imgEl.naturalWidth > 0){
+            imgMap[p.imgSrc] = p.imgEl;
+        } else if(p.imgSrc) {
+            imgMap[p.imgSrc] = await loadImageAsync(p.imgSrc);
+        }
+    }
 
     const canvases = [];
 
@@ -597,14 +603,23 @@ async function generateCatalog(){
     }
 
     // ---- BUILD PDF ----
+    // Small delay to let browser process
+    await new Promise(r => setTimeout(r, 100));
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    canvases.forEach((c, idx) => {
+    for(let idx = 0; idx < canvases.length; idx++){
         if(idx > 0) doc.addPage();
-        const imgData = c.toDataURL('image/jpeg', 0.92);
-        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-    });
+        try {
+            const imgData = canvases[idx].toDataURL('image/jpeg', 0.85);
+            doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        } catch(e) {
+            console.warn('Page ' + idx + ' failed:', e);
+        }
+        // Free memory
+        canvases[idx] = null;
+    }
 
     doc.save('Swayjo-Catalog.pdf');
     btn.innerHTML = originalText;
