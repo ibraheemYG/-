@@ -322,10 +322,15 @@ img, svg { max-width: 100%; height: auto; }
     position: relative;
     padding: 16px;
     background: rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    overflow: hidden;
 }
 .card-img img {
     width: 100%;
-    aspect-ratio: 1;
+    height: 100%;
     object-fit: contain;
     border-radius: var(--radius-sm);
     transition: var(--transition);
@@ -686,6 +691,7 @@ footer {
     .hero { min-height: 70vh; padding-top: 100px; }
     .hero-title { font-size: 1.8rem; }
     .product-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .card-img { height: 140px; padding: 10px; }
     .card-body h3 { font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .card-actions { flex-direction: column; gap: 8px; }
     .add-cart-btn { width: 100%; justify-content: center; }
@@ -697,7 +703,7 @@ footer {
 
 @media (max-width: 400px) {
     .product-list { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .card-img { padding: 8px; }
+    .card-img { padding: 8px; height: 120px; }
     .card-body { padding: 0 10px 8px; }
     .card-body h3 { font-size: 0.8rem; }
     .price { font-size: 0.9rem; }
