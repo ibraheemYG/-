@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سويجو - متجر</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <header class="site-header">
+        <div class="brand">
+            <h1>سويجو</h1>
+           
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#home">الرئيسية</a></li>
+                <li><a href="#products">المنتجات</a></li>
+                <li><a href="#contact">اتصل بنا</a></li>
+            </ul>
+        </nav>
+
+        <!-- زر عربة التسوق يفتح نافذة (modal) بدلاً من صفحة منفصلة -->
+        <button id="header-cart-btn" class="header-cart" title="عربة التسوق" aria-label="عرض عربة التسوق">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M3 3h2l.4 2M7 13h10l3-8H6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="10" cy="20" r="1" fill="currentColor"/><circle cx="18" cy="20" r="1" fill="currentColor"/>
+            </svg>
+            <span id="cart-count" class="cart-badge">0</span>
+        </button>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <h2 class="hero-title">تجربة السويجات المستقبلية</h2>
+            <p class="hero-sub">عيش المستقبل الان</p>
+        </section>
+
+        <section id="products" class="products-section">
+            <h2>منتجاتنا</h2>
+            
+            <!-- تصنيفات المنتجات -->
+            <div class="categories-filter">
+                <button class="cat-btn active" data-filter="all">الكل</button>
+                <button class="cat-btn" data-filter="switches">سويجات</button>
+                <button class="cat-btn" data-filter="lighting">انارة</button>
+                <button class="cat-btn" data-filter="controllers">اجهزة تحكم</button>
+                <button class="cat-btn" data-filter="sensors">حساس</button>
+                <button class="cat-btn" data-filter="sockets">بلكات</button>
+            </div>
+
+            <div class="product-list">
+
+                <article class="product-card" data-id="1" data-price="12000" data-category="switches" data-description="ميني سويج ثنائي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (1).png" alt="ميني سويج ثنائي" loading="lazy">
+                    <div class="card-body">
+                        <h3>ميني سويج ثنائي</h3>
+                        <p class="price">12,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="2" data-price="8000" data-category="switches" data-description="ميني سويج احادي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (2).png" alt="ميني سويج احادي" loading="lazy">
+                    <div class="card-body">
+                        <h3>ميني سويج احادي</h3>
+                        <p class="price">8,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="5" data-price="20000" data-category="switches" data-description="سويج ثلاثي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (5).png" alt="سويج ثلاثي" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج ثلاثي</h3>
+                        <p class="price">20,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="6" data-price="18000" data-category="controllers" data-description="راوتر زكبي(hub) ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (6).png" alt="راوتر زكبي(hub)" loading="lazy">
+                    <div class="card-body">
+                        <h3>راوتر زكبي(hub)</h3>
+                        <p class="price">18,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="7" data-price="20000" data-category="switches" data-description="بلك سويج 13 امبير ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (7).png" alt="بلك سويج 13 امبير" loading="lazy">
+                    <div class="card-body">
+                        <h3>بلك سويج 13 امبير</h3>
+                        <p class="price">20,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="8" data-price="25000" data-category="switches" data-description="سويج رباعي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (8).png" alt="سويج رباعي" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج رباعي</h3>
+                        <p class="price">25,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="9" data-price="25000" data-category="switches" data-description="سويج سخان 40 امبير ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (9).png" alt="سويج سخان 40 امبير" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج سخان 40 امبير</h3>
+                        <p class="price">25,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="11" data-price="20000" data-category="switches" data-description="سويج سبلت 20 امبير ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (11).png" alt="سويج سبلت 20 امبير" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج سبلت 20 امبير</h3>
+                        <p class="price">20,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="12" data-price="10000" data-category="sockets" data-description="بلك محمول 20امبير ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (12).png" alt="بلك محمول 20امبير" loading="lazy">
+                    <div class="card-body">
+                        <h3>بلك محمول 20امبير</h3>
+                        <p class="price">10,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="13" data-price="10000" data-category="lighting" data-description="مصباح ذكي متعدد الالوان ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (13).png" alt="مصباح ذكي متعدد الالوان" loading="lazy">
+                    <div class="card-body">
+                        <h3>مصباح ذكي متعدد الالوان</h3>
+                        <p class="price">10,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="14" data-price="25000" data-category="sensors" data-description="حساس دخان مع رطوبة وحرارة ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (14).png" alt="حساس دخان مع رطوبة وحرارة" loading="lazy">
+                    <div class="card-body">
+                        <h3>حساس دخان مع رطوبة وحرارة</h3>
+                        <p class="price">25,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="15" data-price="10000" data-category="controllers" data-description="ريمونت IR ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (15).png" alt="ريمونت IR" loading="lazy">
+                    <div class="card-body">
+                        <h3>ريمونت IR</h3>
+                        <p class="price">10,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="16" data-price="20000" data-category="switches" data-description="سويج مروحة ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (16).png" alt="سويج مروحة" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج مروحة</h3>
+                        <p class="price">20,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="17" data-price="20000" data-category="switches" data-description="جوزة ذكية 63 امبير ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (17).png" alt="جوزة ذكية 63 امبير" loading="lazy">
+                    <div class="card-body">
+                        <h3>جوزة ذكية 63 امبير</h3>
+                        <p class="price">20,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="18" data-price="17000" data-category="switches" data-description="سويج ثنائي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (18).png" alt="سويج ثنائي" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج ثنائي</h3>
+                        <p class="price">17,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+                <article class="product-card" data-id="21" data-price="15000" data-category="switches" data-description="سويج احادي ذكي، تحكم كامل عن بعد.">
+                    <img src="switch (21).png" alt="سويج احادي" loading="lazy">
+                    <div class="card-body">
+                        <h3>سويج احادي</h3>
+                        <p class="price">15,000 د.ع</p><div class="color-options" style="display:flex;gap:5px;justify-content:center;margin-top:8px;"><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#fff;border:1px solid #ccc;cursor:pointer;" title="أبيض"></span><span class="color-dot" style="width:15px;height:15px;border-radius:50%;background-color:#000;border:1px solid #333;cursor:pointer;" title="أسود"></span></div>
+                    </div>
+                    <div class="card-controls" aria-label="عربة المنتج">
+                        <div class="qty-control" role="group" aria-label="عداد الكمية">
+                            <button class="qty-btn qty-decrease" aria-label="نقص">−</button>
+                            <span class="qty" data-qty>1</span>
+                            <button class="qty-btn qty-increase" aria-label="زيادة">+</button>
+                        </div>
+                        <button class="add-cart-btn" aria-label="اضف">اضف</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <h2>اتصل بنا</h2>
+            <p>لديك استفسار؟ راسلنا وسنرد في أقرب وقت.</p>
+            <div class="contact-buttons">
+                <a href="https://wa.me/9647774823205" target="_blank" class="whatsapp-btn">
+                    <img src="whatsapp.png" alt="WhatsApp" width="24" height="24">
+                    راسلنا عبر واتساب
+                </a>
+                <a href="https://instagram.com/swi.cho" target="_blank" class="instagram-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    تابعنا على انستغرام
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- شريط التوافق (أسفل الصفحة) -->
+    <section class="compatibility-bar" aria-label="التوافق">
+        <div class="compat-inner">
+            <div class="compat-text">تتوافق هذه السويجات مع</div>
+            <div class="compat-icons">
+                <img src="alexa.png" alt="التحكم عبر أليكسا" loading="lazy">
+                <img src="googlehome.png" alt="التحكم عبر Google Home" loading="lazy">
+                <img src="smartlife.png" alt="تطبيق Smart Life" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>جميع الحقوق محفوظة &copy; <span id="year"></span> سويجو</p>
+    </footer>
+
+    <!-- نافذة عربة التسوق (modal) -->
+    <div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+    <aside id="cart-modal" class="cart-modal" role="dialog" aria-label="عربة التسوق" aria-hidden="true">
+        <div class="cart-modal-header">
+            <h3>عربة التسوق</h3>
+            <button id="cart-close" class="cart-close" aria-label="إغلاق">✕</button>
+        </div>
+        <div id="cart-modal-content" class="cart-modal-content">
+            <!-- المحتوى يُملأ بواسطة js: أسماء المنتجات، الكميات، السعر، والمجموع -->
+        </div>
+    </aside>
+
+    <!-- نافذة تفاصيل المنتج (modal) -->
+    <div id="product-overlay" class="cart-overlay" aria-hidden="true"></div>
+    <aside id="product-modal" class="cart-modal product-details-modal" role="dialog" aria-label="تفاصيل المنتج" aria-hidden="true">
+        <div class="cart-modal-header">
+            <h3>تفاصيل المنتج</h3>
+            <button id="product-close" class="cart-close" aria-label="إغلاق">✕</button>
+        </div>
+        <div id="product-modal-content" class="cart-modal-content">
+            <!-- المحتوى يُملأ بواسطة js -->
+        </div>
+    </aside>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

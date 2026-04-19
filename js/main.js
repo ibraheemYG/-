@@ -1,32 +1,28 @@
-// This file contains JavaScript code for interactivity on the website.
+// === SWAYJO - Main JS ===
 
-// -- all cart & UI logic --
-// cart helpers (reuse)
+// -- Cart Helpers --
 function getCart(){
-    try{ return JSON.parse(localStorage.getItem('swayjat_cart')||'[]'); }
-    catch{ return []; }
+    try { return JSON.parse(localStorage.getItem('swayjat_cart') || '[]'); }
+    catch { return []; }
 }
 function saveCart(cart){ localStorage.setItem('swayjat_cart', JSON.stringify(cart)); }
-function cartTotalCount(){ return getCart().reduce((s,i)=> s + (i.qty||0), 0); }
-function updateHeaderCountUI(){ const el = document.getElementById('cart-count'); if(el) el.textContent = cartTotalCount(); }
+function cartTotalCount(){ return getCart().reduce((s, i) => s + (i.qty || 0), 0); }
+function updateHeaderCountUI(){
+    const el = document.getElementById('cart-count');
+    if(el) el.textContent = cartTotalCount();
+}
+function formatCurrency(n){ return Number(n).toLocaleString('en-US') + ' د.ع'; }
 
-// open/close modal and render
-function openCartModal(){ 
+// -- Cart Modal --
+function openCartModal(){
     document.getElementById('cart-overlay').classList.add('open');
     document.getElementById('cart-modal').classList.add('open');
-    document.getElementById('cart-overlay').setAttribute('aria-hidden','false');
-    document.getElementById('cart-modal').setAttribute('aria-hidden','false');
     renderCartModal();
 }
 function closeCartModal(){
     document.getElementById('cart-overlay').classList.remove('open');
     document.getElementById('cart-modal').classList.remove('open');
-    document.getElementById('cart-overlay').setAttribute('aria-hidden','true');
-    document.getElementById('cart-modal').setAttribute('aria-hidden','true');
 }
-
-// render modal content (names only, no images)
-function formatCurrency(n){ return Number(n).toLocaleString('en-US') + ' د.ع'; }
 
 function renderCartModal(){
     const root = document.getElementById('cart-modal-content');
@@ -35,31 +31,25 @@ function renderCartModal(){
     root.innerHTML = '';
 
     if(cart.length === 0){
-        root.innerHTML = '<p>العربة فارغة.</p>';
+        root.innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px">العربة فارغة</p>';
         return;
     }
 
     let total = 0;
-    cart.forEach((item, index)=>{
-        const subtotal = (item.price||0) * (item.qty||0);
+    cart.forEach((item, index) => {
+        const subtotal = (item.price || 0) * (item.qty || 0);
         total += subtotal;
-
         const row = document.createElement('div');
         row.className = 'cart-row';
         row.dataset.index = index;
-        
-        const colorHtml = item.color ? `<div style="font-size:0.85em;color:#aaa;margin-top:4px;">اللون: ${item.color}</div>` : '';
-
+        const colorHtml = item.color ? `<div style="font-size:0.8em;color:var(--muted);margin-top:4px">اللون: ${item.color}</div>` : '';
         row.innerHTML = `
-            <div class="meta">
-                <h4>${item.name}</h4>
-                ${colorHtml}
-            </div>
+            <div class="meta"><h4>${item.name}</h4>${colorHtml}</div>
             <div class="row-controls">
-                <button class="ci-decrease" aria-label="نقص">−</button>
-                <div class="ci-qty">${item.qty}</div>
+                <button class="ci-decrease" aria-label="إنقاص">−</button>
+                <div style="min-width:20px;text-align:center;font-weight:700">${item.qty}</div>
                 <button class="ci-increase" aria-label="زيادة">+</button>
-                <button class="ci-remove" title="حذف" style="margin-left:8px">حذف</button>
+                <button class="ci-remove" title="حذف" style="color:#e17055">✕</button>
             </div>
             <div class="price">${formatCurrency(subtotal)}</div>
         `;
@@ -68,45 +58,37 @@ function renderCartModal(){
 
     const summary = document.createElement('div');
     summary.className = 'cart-summary-modal';
-    summary.innerHTML = `<div>إجمالي: <strong>${formatCurrency(total)}</strong></div><div><button id="modal-checkout" class="add-cart-btn">إتمام الطلب</button></div>`;
+    summary.innerHTML = `<div>الإجمالي: <strong>${formatCurrency(total)}</strong></div><div><button id="modal-checkout" class="btn btn-primary" style="padding:10px 24px">إتمام الطلب</button></div>`;
     root.appendChild(summary);
 
-    // attach handlers
-    root.querySelectorAll('.ci-increase').forEach(b=>{
-        b.addEventListener('click', e=>{
+    // Handlers
+    root.querySelectorAll('.ci-increase').forEach(b => {
+        b.addEventListener('click', e => {
             const idx = Number(e.target.closest('.cart-row').dataset.index);
-            const cart = getCart();
-            if(cart[idx]){ 
-                cart[idx].qty = Math.min(999, cart[idx].qty+1); 
-                saveCart(cart); updateHeaderCountUI(); renderCartModal(); 
-            }
+            const c = getCart();
+            if(c[idx]){ c[idx].qty = Math.min(999, c[idx].qty + 1); saveCart(c); updateHeaderCountUI(); renderCartModal(); }
         });
     });
-    root.querySelectorAll('.ci-decrease').forEach(b=>{
-        b.addEventListener('click', e=>{
+    root.querySelectorAll('.ci-decrease').forEach(b => {
+        b.addEventListener('click', e => {
             const idx = Number(e.target.closest('.cart-row').dataset.index);
-            const cart = getCart();
-            if(cart[idx]){ 
-                cart[idx].qty = Math.max(1, cart[idx].qty-1); 
-                saveCart(cart); updateHeaderCountUI(); renderCartModal(); 
-            }
+            const c = getCart();
+            if(c[idx]){ c[idx].qty = Math.max(1, c[idx].qty - 1); saveCart(c); updateHeaderCountUI(); renderCartModal(); }
         });
     });
-    root.querySelectorAll('.ci-remove').forEach(b=>{
-        b.addEventListener('click', e=>{
+    root.querySelectorAll('.ci-remove').forEach(b => {
+        b.addEventListener('click', e => {
             const idx = Number(e.target.closest('.cart-row').dataset.index);
-            let cart = getCart();
-            cart.splice(idx, 1);
-            saveCart(cart); updateHeaderCountUI(); renderCartModal();
+            const c = getCart();
+            c.splice(idx, 1);
+            saveCart(c); updateHeaderCountUI(); renderCartModal();
         });
     });
 
-    // attach checkout button listener
-    const checkoutBtn = document.getElementById('modal-checkout') || summary.querySelector('#modal-checkout');
+    const checkoutBtn = document.getElementById('modal-checkout');
     if(checkoutBtn){
-        checkoutBtn.addEventListener('click', (ev)=>{
+        checkoutBtn.addEventListener('click', ev => {
             ev.preventDefault();
-            // if a checkout form already exists, scroll to it
             const rootEl = document.getElementById('cart-modal-content');
             if(rootEl.querySelector('.checkout-form')){
                 rootEl.querySelector('.checkout-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -117,185 +99,113 @@ function renderCartModal(){
     }
 }
 
-/* إضافة نموذج معلومات الشحن والتحقق وإرسال رسالة عبر واتساب */
-
-// تحويل رقم المستلم المحلي إلى صيغة دولية بدون الصفر الابتدائي
+// -- Checkout Form --
 const WHATSAPP_RECIPIENT_LOCAL = '07774823205';
 const WHATSAPP_RECIPIENT_INTL = '964' + WHATSAPP_RECIPIENT_LOCAL.replace(/^0+/, '');
 
-// تحقق بسيط لرقم الهاتف (يقبل 10 أو 11 رقماً ويجب أن يبدأ بـ07)
 function isValidIraqPhone(phone){
-    const cleaned = String(phone).replace(/\s|-/g,'');
-
-    return /^07\d{8,9}$/.test(cleaned);
+    return /^07\d{8,9}$/.test(String(phone).replace(/\s|-/g, ''));
 }
 
-// عرض نموذج الإتمام داخل الـ modal
 function showCheckoutForm(){
     const root = document.getElementById('cart-modal-content');
     if(!root) return;
-
-    // remove existing checkout form if any (prevent duplicates)
     const existing = root.querySelector('.checkout-form');
     if(existing) existing.remove();
 
-    // إنشاء النموذج
     const formWrap = document.createElement('div');
     formWrap.className = 'checkout-form';
-
     formWrap.innerHTML = `
-        <h4 style="margin:0 0 8px">أدخل بيانات الشحن</h4>
-        <label>الاسم (اختياري)
-            <input type="text" id="co-name" placeholder="الاسم الكامل">
-        </label>
+        <h4 style="margin:0 0 8px">بيانات الشحن</h4>
+        <label>الاسم (اختياري)<input type="text" id="co-name" placeholder="الاسم الكامل"></label>
         <label>المحافظة (مطلوب)
-            <select id="co-governorate" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.12);color:#fff;outline:none;">
+            <select id="co-governorate">
                 <option value="" disabled selected>اختر المحافظة</option>
-                <option value="Baghdad">بغداد</option>
-                <option value="Basra">البصرة</option>
-                <option value="Nineveh">نينوى</option>
-                <option value="Erbil">أربيل</option>
-                <option value="Sulaymaniyah">السليمانية</option>
-                <option value="Duhok">دهوك</option>
-                <option value="Kirkuk">كركوك</option>
-                <option value="Anbar">الأنبار</option>
-                <option value="Diyala">ديالى</option>
-                <option value="Babil">بابل</option>
-                <option value="Karbala">كربلاء</option>
-                <option value="Najaf">النجف</option>
-                <option value="Wasit">واسط</option>
-                <option value="Qadisiyah">الديوانية</option>
-                <option value="Maysan">ميسان</option>
-                <option value="DhiQar">ذي قار</option>
-                <option value="Muthanna">المثنى</option>
-                <option value="Saladin">صلاح الدين</option>
+                <option value="Baghdad">بغداد</option><option value="Basra">البصرة</option>
+                <option value="Nineveh">نينوى</option><option value="Erbil">أربيل</option>
+                <option value="Sulaymaniyah">السليمانية</option><option value="Duhok">دهوك</option>
+                <option value="Kirkuk">كركوك</option><option value="Anbar">الأنبار</option>
+                <option value="Diyala">ديالى</option><option value="Babil">بابل</option>
+                <option value="Karbala">كربلاء</option><option value="Najaf">النجف</option>
+                <option value="Wasit">واسط</option><option value="Qadisiyah">الديوانية</option>
+                <option value="Maysan">ميسان</option><option value="DhiQar">ذي قار</option>
+                <option value="Muthanna">المثنى</option><option value="Saladin">صلاح الدين</option>
             </select>
         </label>
-        <label>العنوان (مطلوب)
-            <textarea id="co-address" placeholder="عنوان الشحن" rows="2"></textarea>
-        </label>
-        <label>رقم الهاتف (مثال: 0777xxxxxxx) - مطلوب
-            <input type="tel" id="co-phone" placeholder="0777xxxxxxxx">
-        </label>
+        <label>العنوان (مطلوب)<textarea id="co-address" placeholder="عنوان الشحن التفصيلي" rows="2"></textarea></label>
+        <label>رقم الهاتف (مطلوب)<input type="tel" id="co-phone" placeholder="07XXXXXXXXX"></label>
         <div class="checkout-actions">
-            <div class="checkout-error" id="co-error" aria-live="polite" style="color:#ffb5b5"></div>
+            <div id="co-error" style="color:#e17055;font-size:0.85rem"></div>
             <div style="display:flex;gap:8px">
-                <button id="co-send" class="add-cart-btn">إرسال عبر واتساب</button>
-                <button id="co-cancel" class="cart-close" style="background:transparent;color:var(--muted)">إلغاء</button>
+                <button id="co-send" class="btn btn-primary" style="padding:10px 20px">إرسال عبر واتساب</button>
+                <button id="co-cancel" class="btn btn-outline" style="padding:10px 16px">إلغاء</button>
             </div>
         </div>
     `;
-
-    // ضع النموذج أعلى المحتوى (أو تحت القائمة الإجمالية)
     root.appendChild(formWrap);
     formWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // زر الغاء
-    formWrap.querySelector('#co-cancel').addEventListener('click', ()=>{
-        formWrap.remove();
-    });
-
-    // زر إرسال: تحقق ثم افتح واتساب مع رسالة مهيأة
-    formWrap.querySelector('#co-send').addEventListener('click', ()=>{
-
+    formWrap.querySelector('#co-cancel').addEventListener('click', () => formWrap.remove());
+    formWrap.querySelector('#co-send').addEventListener('click', () => {
         const name = (document.getElementById('co-name')?.value || '').trim();
-        const governorateSelect = document.getElementById('co-governorate');
-        const governorate = governorateSelect?.value;
-        const governorateName = governorateSelect?.options[governorateSelect.selectedIndex]?.text;
+        const govSel = document.getElementById('co-governorate');
+        const gov = govSel?.value;
+        const govName = govSel?.options[govSel.selectedIndex]?.text;
         const address = (document.getElementById('co-address')?.value || '').trim();
         const phone = (document.getElementById('co-phone')?.value || '').trim();
         const errEl = document.getElementById('co-error');
 
-        if(!governorate){
-            errEl.textContent = 'الرجاء اختيار المحافظة.';
-            return;
-        }
-        if(!address){
-            errEl.textContent = 'الرجاء إدخال العنوان.';
-            return;
-        }
-        if(!isValidIraqPhone(phone)){
-            errEl.textContent = 'رقم الهاتف غير صالح. يجب أن يبدأ بـ 07 ويتكون من 10 أو 11 رقماً.';
-            return;
-        }
+        if(!gov){ errEl.textContent = 'الرجاء اختيار المحافظة'; return; }
+        if(!address){ errEl.textContent = 'الرجاء إدخال العنوان'; return; }
+        if(!isValidIraqPhone(phone)){ errEl.textContent = 'رقم الهاتف غير صالح (يبدأ بـ 07)'; return; }
 
-        // اجلب محتويات العربة
         const cart = getCart();
-        if(!cart || cart.length === 0){
-            errEl.textContent = 'العربة فارغة.';
-            return;
-        }
+        if(!cart.length){ errEl.textContent = 'العربة فارغة'; return; }
 
-        // حساب التوصيل
-        const deliveryFee = (governorate === 'Baghdad') ? 5000 : 6000;
-
-        // جهّز نص الرسالة
-        let lines = [];
-        lines.push('طلب من متجر سويجو');
+        const deliveryFee = gov === 'Baghdad' ? 5000 : 6000;
+        let lines = ['طلب من متجر سويجو'];
         if(name) lines.push('الاسم: ' + name);
-        lines.push('المحافظة: ' + governorateName);
-        lines.push('العنوان: ' + address);
-        lines.push('الهاتف: ' + phone);
-        lines.push('---');
-        lines.push('المنتجات:');
+        lines.push('المحافظة: ' + govName, 'العنوان: ' + address, 'الهاتف: ' + phone, '---', 'المنتجات:');
 
         let total = 0;
-        cart.forEach(it=>{
-            const subtotal = (it.price||0) * (it.qty||0);
-            total += subtotal;
-            const colorStr = it.color ? ` (لون: ${it.color})` : '';
-            lines.push(`- ${it.name}${colorStr} × ${it.qty} = ${formatCurrency(subtotal)}`);
+        cart.forEach(it => {
+            const sub = (it.price || 0) * (it.qty || 0);
+            total += sub;
+            const c = it.color ? ` (${it.color})` : '';
+            lines.push(`- ${it.name}${c} × ${it.qty} = ${formatCurrency(sub)}`);
         });
-        lines.push('---');
-        lines.push('مجموع المنتجات: ' + formatCurrency(total));
-        lines.push('التوصيل: ' + formatCurrency(deliveryFee));
-        lines.push('المجموع الكلي: ' + formatCurrency(total + deliveryFee));
+        lines.push('---', 'المنتجات: ' + formatCurrency(total), 'التوصيل: ' + formatCurrency(deliveryFee), 'الإجمالي: ' + formatCurrency(total + deliveryFee));
 
-        const message = encodeURIComponent(lines.join('\n'));
-
-        // افتح واتساب ويب/تطبيق (يفتح في تبويب جديد)
-        const waUrl = `https://wa.me/${WHATSAPP_RECIPIENT_INTL}?text=${message}`;
-        window.open(waUrl, '_blank');
-
-        // اغلاق النافذة (اختياري)
+        window.open(`https://wa.me/${WHATSAPP_RECIPIENT_INTL}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
         closeCartModal();
     });
 }
 
-// -- Product Details Modal Logic --
-function openProductModal(card) {
+// -- Product Modal --
+function openProductModal(card){
     const modal = document.getElementById('product-modal');
     const overlay = document.getElementById('product-overlay');
     const content = document.getElementById('product-modal-content');
-    
     if(!modal || !overlay || !content) return;
 
     const img = card.querySelector('img').src;
     const title = card.querySelector('h3').textContent;
     const price = card.querySelector('.price').textContent;
-    const description = card.dataset.description || 'لا يوجد وصف متاح حالياً.';
+    const desc = card.dataset.description || '';
     const id = card.dataset.id;
     const priceVal = card.dataset.price;
 
-    // Dynamic colors from card
     let colorsBlock = '';
-    const sourceColors = card.querySelectorAll('.color-dot');
-    if(sourceColors.length > 0){
+    const dots = card.querySelectorAll('.color-dot');
+    if(dots.length){
         let dotsHtml = '';
-        sourceColors.forEach(d => {
-            // clone and resize for modal
-            let clone = d.cloneNode(true);
-            clone.style.width = '24px';
-            clone.style.height = '24px';
-            clone.style.margin = '0';
-            dotsHtml += clone.outerHTML;
+        dots.forEach(d => {
+            const cl = d.cloneNode(true);
+            cl.style.width = '24px';
+            cl.style.height = '24px';
+            dotsHtml += cl.outerHTML;
         });
-        colorsBlock = `
-            <div class="color-options" style="display:flex;gap:10px;margin:15px 0;align-items:center;">
-                <span style="font-weight:bold;margin-left:5px;">الألوان:</span>
-                ${dotsHtml}
-            </div>
-        `;
+        colorsBlock = `<div class="color-options" style="gap:10px;margin:12px 0"><span style="font-weight:700;margin-left:6px">الألوان:</span>${dotsHtml}</div>`;
     }
 
     content.innerHTML = `
@@ -304,209 +214,366 @@ function openProductModal(card) {
             <div class="product-detail-info">
                 <h3>${title}</h3>
                 <span class="price">${price}</span>
-                <p>${description}</p>
-                
+                <p>${desc}</p>
                 ${colorsBlock}
-
-                <button class="add-cart-btn" id="modal-add-btn" style="width:100%">إضافة للعربة</button>
+                <button class="btn btn-primary" id="modal-add-btn" style="width:100%">إضافة للعربة</button>
             </div>
         </div>
     `;
 
-    // Handle Color Selection
     let selectedColor = null;
     const modalColors = content.querySelectorAll('.color-dot');
-    if(modalColors.length > 0){
-        // Default to first
+    if(modalColors.length){
         selectedColor = modalColors[0].title;
-        
-        const updateVisuals = () => {
+        const updateSel = () => {
             modalColors.forEach(d => {
-                if(d.title === selectedColor){
-                    d.style.outline = '3px solid #4a90e2';
-                    d.style.outlineOffset = '2px';
-                } else {
-                    d.style.outline = 'none';
-                }
+                d.style.outline = d.title === selectedColor ? '3px solid var(--accent)' : 'none';
+                d.style.outlineOffset = '2px';
             });
         };
-        updateVisuals();
-
-        modalColors.forEach(dot => {
-            dot.addEventListener('click', () => {
-                selectedColor = dot.title;
-                updateVisuals();
-            });
-        });
+        updateSel();
+        modalColors.forEach(d => d.addEventListener('click', () => { selectedColor = d.title; updateSel(); }));
     }
 
-    // Add to cart from modal
     content.querySelector('#modal-add-btn').addEventListener('click', () => {
         const cart = getCart();
-        // Check for existing item with same ID AND Color
         const existing = cart.find(i => i.id === id && i.color === selectedColor);
-
-        if(existing){
-            existing.qty += 1;
-        } else {
-            cart.push({ 
-                id, 
-                name: title, 
-                price: Number(priceVal), 
-                qty: 1, 
-                img,
-                color: selectedColor 
-            });
-        }
+        if(existing){ existing.qty += 1; }
+        else { cart.push({ id, name: title, price: Number(priceVal), qty: 1, img, color: selectedColor }); }
         saveCart(cart);
         updateHeaderCountUI();
         closeProductModal();
-        
-        // Animation feedback
-        const elCount = document.getElementById('cart-count');
-        if(elCount){
-            elCount.animate([
-                { transform: 'scale(1)' },
-                { transform: 'scale(1.2)' },
-                { transform: 'scale(1)' }
-            ], { duration: 300, easing: 'ease-out' });
-        }
+        const badge = document.getElementById('cart-count');
+        if(badge) badge.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 300 });
     });
 
     overlay.classList.add('open');
     modal.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-    modal.setAttribute('aria-hidden', 'false');
+}
+function closeProductModal(){
+    document.getElementById('product-modal')?.classList.remove('open');
+    document.getElementById('product-overlay')?.classList.remove('open');
 }
 
-function closeProductModal() {
-    const modal = document.getElementById('product-modal');
-    const overlay = document.getElementById('product-overlay');
-    
-    if(modal) modal.classList.remove('open');
-    if(overlay) overlay.classList.remove('open');
-    if(modal) modal.setAttribute('aria-hidden', 'true');
-    if(overlay) overlay.setAttribute('aria-hidden', 'true');
-}
-
-// -- Category Filtering Logic --
-function initCategories() {
+// -- Category Filter --
+function initCategories(){
     const buttons = document.querySelectorAll('.cat-btn');
     const products = document.querySelectorAll('.product-card');
-
     buttons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Active state
             buttons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
             const filter = btn.dataset.filter;
-
-            products.forEach(card => {
-                if (filter === 'all' || card.dataset.category === filter) {
-                    card.style.display = 'block';
-                    // Re-trigger animation
+            products.forEach((card, i) => {
+                const show = filter === 'all' || card.dataset.category === filter;
+                card.style.display = show ? '' : 'none';
+                if(show){
                     card.style.animation = 'none';
-                    card.offsetHeight; /* trigger reflow */
-                    card.style.animation = 'floatUp .7s cubic-bezier(.2,.9,.3,1) both';
-                } else {
-                    card.style.display = 'none';
+                    card.offsetHeight;
+                    card.style.animation = `floatUp 0.4s ease ${i * 0.03}s both`;
                 }
             });
         });
     });
 }
 
-// wire UI
-document.addEventListener('DOMContentLoaded', ()=>{
+// -- PDF Catalog --
+function generateCatalog(){
+    const btn = document.getElementById('download-catalog');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ جاري إنشاء الكتالوج...';
+    btn.disabled = true;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210, H = 297;
+    const products = document.querySelectorAll('.product-card');
+
+    // --- Cover Page ---
+    doc.setFillColor(8, 12, 24);
+    doc.rect(0, 0, W, H, 'F');
+
+    // Accent decoration
+    doc.setFillColor(108, 92, 231);
+    doc.roundedRect(20, 20, 170, 4, 2, 2, 'F');
+
+    doc.setTextColor(240, 240, 240);
+    doc.setFontSize(40);
+    doc.text('SWAYJO', W / 2, 90, { align: 'center' });
+
+    doc.setFontSize(14);
+    doc.setTextColor(162, 155, 254);
+    doc.text('Smart Home Solutions', W / 2, 105, { align: 'center' });
+
+    doc.setFontSize(18);
+    doc.setTextColor(200, 200, 200);
+    doc.text('Product Catalog', W / 2, 140, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setTextColor(140, 140, 140);
+    doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' }), W / 2, 155, { align: 'center' });
+
+    doc.setFillColor(108, 92, 231);
+    doc.roundedRect(20, H - 24, 170, 4, 2, 2, 'F');
+
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text('wa.me/9647774823205  |  @swi.cho', W / 2, H - 12, { align: 'center' });
+
+    // --- Product Pages ---
+    const ITEMS_PER_PAGE = 3;
+    const items = Array.from(products);
+    const pageCount = Math.ceil(items.length / ITEMS_PER_PAGE);
+    let loadedImages = 0;
+    const totalImages = items.length;
+
+    // Preload all images
+    const imagePromises = items.map(card => {
+        return new Promise(resolve => {
+            const imgEl = card.querySelector('img');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                ctx.fillStyle = '#0c1018';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => resolve(null);
+            img.src = imgEl.src;
+        });
+    });
+
+    Promise.all(imagePromises).then(images => {
+        for(let page = 0; page < pageCount; page++){
+            doc.addPage();
+            const pageNum = page + 2;
+
+            // Page background
+            doc.setFillColor(8, 12, 24);
+            doc.rect(0, 0, W, H, 'F');
+
+            // Header bar
+            doc.setFillColor(108, 92, 231);
+            doc.rect(0, 0, W, 12, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.text('SWAYJO Catalog', W / 2, 8, { align: 'center' });
+
+            const startIdx = page * ITEMS_PER_PAGE;
+            const pageItems = items.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+            pageItems.forEach((card, i) => {
+                const yBase = 22 + i * 88;
+                const imgData = images[startIdx + i];
+                const name = card.querySelector('h3').textContent;
+                const price = card.querySelector('.price').textContent.replace(/\s+/g, ' ');
+                const desc = card.dataset.description || '';
+                const category = card.querySelector('.card-category')?.textContent || '';
+
+                // Card background
+                doc.setFillColor(16, 20, 36);
+                doc.roundedRect(14, yBase, W - 28, 80, 4, 4, 'F');
+                doc.setDrawColor(40, 44, 60);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(14, yBase, W - 28, 80, 4, 4, 'S');
+
+                // Image
+                if(imgData){
+                    try {
+                        doc.addImage(imgData, 'JPEG', 20, yBase + 6, 60, 60);
+                    } catch(e) {}
+                }
+
+                // Info area
+                const textX = 88;
+
+                // Category pill
+                doc.setFillColor(108, 92, 231, 40);
+                doc.roundedRect(textX, yBase + 8, 30, 8, 3, 3, 'F');
+                doc.setFontSize(7);
+                doc.setTextColor(162, 155, 254);
+                doc.text(category, textX + 15, yBase + 13.5, { align: 'center' });
+
+                // Product name
+                doc.setFontSize(13);
+                doc.setTextColor(240, 240, 240);
+                doc.text(name, textX, yBase + 28);
+
+                // Price
+                doc.setFontSize(12);
+                doc.setTextColor(0, 184, 148);
+                doc.text(price, textX, yBase + 40);
+
+                // Description
+                doc.setFontSize(8);
+                doc.setTextColor(160, 160, 160);
+                const descLines = doc.splitTextToSize(desc, W - 28 - textX + 8);
+                doc.text(descLines.slice(0, 3), textX, yBase + 50);
+
+                // Colors
+                const colorDots = card.querySelectorAll('.color-dot');
+                if(colorDots.length){
+                    let cx = textX;
+                    doc.setFontSize(7);
+                    doc.setTextColor(140, 140, 140);
+                    doc.text('Colors:', cx, yBase + 72);
+                    cx += 18;
+                    colorDots.forEach(dot => {
+                        const bg = dot.style.background || dot.style.backgroundColor;
+                        if(bg.includes('fff') || bg.includes('white')){
+                            doc.setFillColor(230, 230, 230);
+                        } else {
+                            doc.setFillColor(30, 30, 30);
+                        }
+                        doc.circle(cx + 3, yBase + 71, 3, 'F');
+                        doc.setDrawColor(80, 80, 80);
+                        doc.circle(cx + 3, yBase + 71, 3, 'S');
+                        cx += 10;
+                    });
+                }
+            });
+
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`${pageNum} / ${pageCount + 1}`, W / 2, H - 8, { align: 'center' });
+        }
+
+        // --- Back Cover ---
+        doc.addPage();
+        doc.setFillColor(8, 12, 24);
+        doc.rect(0, 0, W, H, 'F');
+
+        doc.setFillColor(108, 92, 231);
+        doc.roundedRect(60, 100, 90, 3, 1.5, 1.5, 'F');
+
+        doc.setTextColor(240, 240, 240);
+        doc.setFontSize(22);
+        doc.text('SWAYJO', W / 2, 125, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setTextColor(162, 155, 254);
+        doc.text('Smart Home Solutions', W / 2, 137, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setTextColor(180, 180, 180);
+        doc.text('WhatsApp: +964 777 482 3205', W / 2, 165, { align: 'center' });
+        doc.text('Instagram: @swi.cho', W / 2, 177, { align: 'center' });
+
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text('Alexa  |  Google Home  |  Smart Life', W / 2, 200, { align: 'center' });
+
+        doc.save('Swayjo-Catalog.pdf');
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }).catch(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// -- Smooth Scroll Nav Highlight --
+function initNavHighlight(){
+    const links = document.querySelectorAll('.nav-link');
+    const sections = ['home', 'products', 'catalog-section', 'contact'];
+
+    window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY + 100;
+        let current = 'home';
+        sections.forEach(id => {
+            const sec = document.getElementById(id);
+            if(sec && sec.offsetTop <= scrollY) current = id;
+        });
+        links.forEach(l => {
+            l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+        });
+    });
+}
+
+// -- Init --
+document.addEventListener('DOMContentLoaded', () => {
+    // Year
+    const yearEl = document.getElementById('year');
+    if(yearEl) yearEl.textContent = new Date().getFullYear();
 
     initCategories();
+    initNavHighlight();
 
-    // Product Modal Events
-    const productOverlay = document.getElementById('product-overlay');
-    const productClose = document.getElementById('product-close');
-    
-    if(productOverlay) productOverlay.addEventListener('click', closeProductModal);
-    if(productClose) productClose.addEventListener('click', closeProductModal);
+    // Mobile menu
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const nav = document.getElementById('main-nav');
+    if(menuBtn && nav){
+        menuBtn.addEventListener('click', () => nav.classList.toggle('open'));
+        nav.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => nav.classList.remove('open')));
+    }
 
-    // update header count from persisted cart
+    // Product modal
+    document.getElementById('product-overlay')?.addEventListener('click', closeProductModal);
+    document.getElementById('product-close')?.addEventListener('click', closeProductModal);
+
+    // Cart modal
     updateHeaderCountUI();
+    document.getElementById('header-cart-btn')?.addEventListener('click', openCartModal);
+    document.getElementById('cart-overlay')?.addEventListener('click', closeCartModal);
+    document.getElementById('cart-close')?.addEventListener('click', closeCartModal);
 
-    // header cart button opens modal
-    const headerBtn = document.getElementById('header-cart-btn');
-    if(headerBtn) headerBtn.addEventListener('click', openCartModal);
+    // Catalog download
+    document.getElementById('download-catalog')?.addEventListener('click', generateCatalog);
 
-    // overlay and close button
-    const overlay = document.getElementById('cart-overlay');
-    if(overlay) overlay.addEventListener('click', closeCartModal);
-    const closeBtn = document.getElementById('cart-close');
-    if(closeBtn) closeBtn.addEventListener('click', closeCartModal);
-
-    // Delegate clicks inside product-list for qty and add buttons
+    // Product list delegation
     const productList = document.querySelector('.product-list');
     if(productList){
-        productList.addEventListener('click', e=>{
-            // 1. Check for controls (buttons)
+        productList.addEventListener('click', e => {
             const btn = e.target.closest('.qty-btn, .add-cart-btn');
-            if(btn) {
+            if(btn){
                 const card = btn.closest('.product-card');
                 if(!card) return;
-
                 const qtyEl = card.querySelector('[data-qty]');
                 let qty = Number(qtyEl?.textContent) || 1;
 
                 if(btn.classList.contains('qty-increase')){
-                    qty = Math.min(99, qty + 1);
-                    if(qtyEl) qtyEl.textContent = qty;
+                    qtyEl.textContent = Math.min(99, qty + 1);
                     return;
                 }
                 if(btn.classList.contains('qty-decrease')){
-                    qty = Math.max(1, qty - 1);
-                    if(qtyEl) qtyEl.textContent = qty;
+                    qtyEl.textContent = Math.max(1, qty - 1);
                     return;
                 }
-
                 if(btn.classList.contains('add-cart-btn')){
-                    const id = String(card.dataset.id || card.querySelector('h3')?.textContent || Math.random());
-                    const name = card.querySelector('.card-body h3')?.textContent?.trim() || 'منتج';
+                    const id = card.dataset.id;
+                    const name = card.querySelector('h3')?.textContent?.trim() || 'منتج';
                     const price = Number(card.dataset.price || 0);
-                    const img = card.querySelector('img')?.getAttribute('src') || '';
-
+                    const img = card.querySelector('img')?.src || '';
                     const cart = getCart();
-                    const existing = cart.find(i=> i.id === id);
-                    if(existing){
-                        existing.qty = Math.min(999, existing.qty + qty);
-                    } else {
-                        cart.push({ id, name, price, qty, img });
-                    }
+                    const existing = cart.find(i => i.id === id);
+                    if(existing){ existing.qty = Math.min(999, existing.qty + qty); }
+                    else { cart.push({ id, name, price, qty, img }); }
                     saveCart(cart);
                     updateHeaderCountUI();
-
-                    // small animation on badge
-                    const elCount = document.getElementById('cart-count');
-                    if(elCount){
-                        elCount.animate([
-                            { transform: 'scale(1)' },
-                            { transform: 'scale(1.2)' },
-                            { transform: 'scale(1)' }
-                        ], { duration: 300, easing: 'ease-out' });
-                    }
-
-                    // reset qty display to 1
+                    const badge = document.getElementById('cart-count');
+                    if(badge) badge.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 300 });
                     if(qtyEl) qtyEl.textContent = '1';
                 }
-                return; // Stop here if it was a button click
+                return;
             }
-
-            // 2. Check for card click (for modal)
-            // Ignore if clicked on controls container (just in case)
-            if(e.target.closest('.card-controls')) return;
-            
+            if(e.target.closest('.card-actions')) return;
             const card = e.target.closest('.product-card');
-            if(card) {
-                openProductModal(card);
-            }
+            if(card) openProductModal(card);
         });
     }
 
+    // Keyboard: Escape closes modals
+    document.addEventListener('keydown', e => {
+        if(e.key === 'Escape'){
+            closeCartModal();
+            closeProductModal();
+        }
+    });
 });
