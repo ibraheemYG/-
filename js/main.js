@@ -277,33 +277,84 @@ function initCategories(){
     });
 }
 
-// -- PDF Catalog --
-function buildCatalogPage(htmlContent, width, height){
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = `position:fixed;left:-9999px;top:0;width:${width}px;height:${height}px;overflow:hidden;z-index:-1;`;
-    wrapper.innerHTML = htmlContent;
-    document.body.appendChild(wrapper);
-    return wrapper;
+// -- PDF Catalog (Canvas 2D API) --
+function createPageCanvas(w, h, scale){
+    const c = document.createElement('canvas');
+    c.width = w * scale;
+    c.height = h * scale;
+    const ctx = c.getContext('2d');
+    ctx.scale(scale, scale);
+    return { canvas: c, ctx };
 }
 
-function renderPageToCanvas(el){
-    return html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#060a14',
-        width: el.offsetWidth,
-        height: el.offsetHeight
+function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function fillBg(ctx, w, h){
+    ctx.fillStyle = '#060a14';
+    ctx.fillRect(0, 0, w, h);
+}
+
+function drawTextRTL(ctx, text, x, y, font, color, align){
+    ctx.save();
+    ctx.direction = 'rtl';
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+}
+
+function wrapTextRTL(ctx, text, x, y, maxW, lineH, font, color){
+    ctx.save();
+    ctx.direction = 'rtl';
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    const words = text.split(' ');
+    let line = '';
+    let cy = y;
+    for(let i = 0; i < words.length; i++){
+        const test = line ? line + ' ' + words[i] : words[i];
+        if(ctx.measureText(test).width > maxW && line){
+            ctx.fillText(line, x, cy);
+            line = words[i];
+            cy += lineH;
+        } else {
+            line = test;
+        }
+    }
+    if(line) ctx.fillText(line, x, cy);
+    ctx.restore();
+    return cy + lineH;
+}
+
+function loadImageAsync(src){
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
     });
 }
 
-function generateCatalog(){
+async function generateCatalog(){
     if(!window.jspdf || !window.jspdf.jsPDF){
         alert('مكتبة PDF لم تُحمّل بعد، يرجى الانتظار ثم المحاولة مرة أخرى.');
-        return;
-    }
-    if(typeof html2canvas === 'undefined'){
-        alert('مكتبة html2canvas لم تُحمّل بعد، يرجى الانتظار ثم المحاولة مرة أخرى.');
         return;
     }
 
@@ -312,12 +363,14 @@ function generateCatalog(){
     btn.innerHTML = '⏳ جاري إنشاء الكتالوج...';
     btn.disabled = true;
 
+    try {
     const cards = Array.from(document.querySelectorAll('.product-card'));
-    const PW = 794, PH = 1123; // A4 at 96dpi in px
+    const PW = 794, PH = 1123, SC = 2;
+    const F = "'VIP Hala Bold', 'Segoe UI', Tahoma, Arial, sans-serif";
 
-    const fontFamily = "'VIP Hala Bold', 'Segoe UI', Tahoma, sans-serif";
+    // Wait for fonts
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
 
-    // --- Gather product data ---
     const products = cards.map(card => {
         const imgEl = card.querySelector('img');
         const price = Number(card.dataset.price || 0);
@@ -328,148 +381,241 @@ function generateCatalog(){
             price20: Math.round(price * 0.8),
             desc: card.dataset.description || '',
             category: card.querySelector('.card-category')?.textContent || '',
-            imgSrc: imgEl ? imgEl.src : '',
-            colors: Array.from(card.querySelectorAll('.color-dot')).map(d => {
-                const bg = d.style.background || d.style.backgroundColor;
-                return { title: d.title, isWhite: bg.includes('fff') || bg.includes('white') };
-            })
+            imgSrc: imgEl ? imgEl.src : ''
         };
     });
 
-    // --- Build pages HTML ---
-    const pages = [];
+    // Pre-load all images
+    const imgMap = {};
+    await Promise.all(products.map(async p => {
+        if(p.imgSrc) imgMap[p.imgSrc] = await loadImageAsync(p.imgSrc);
+    }));
 
-    // Cover
-    pages.push(`<div dir="rtl" style="width:${PW}px;height:${PH}px;background:#060a14;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:${fontFamily};color:#f0f0f0;position:relative;">
-        <div style="position:absolute;top:30px;left:30px;right:30px;height:5px;background:#6c5ce7;border-radius:4px"></div>
-        <div style="font-size:72px;font-weight:700;letter-spacing:4px;margin-bottom:12px">SWAYJO</div>
-        <div style="font-size:22px;color:#a29bfe;margin-bottom:50px">Smart Home Solutions</div>
-        <div style="font-size:30px;color:#ccc;margin-bottom:16px">كتالوج المنتجات</div>
-        <div style="font-size:18px;color:#888">${new Date().toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long' })}</div>
-        <div style="position:absolute;bottom:60px;left:30px;right:30px;height:5px;background:#6c5ce7;border-radius:4px"></div>
-        <div style="position:absolute;bottom:30px;font-size:14px;color:#666">wa.me/9647774823205 &nbsp;|&nbsp; @swi.cho</div>
-    </div>`);
+    const canvases = [];
 
-    // Product pages (4 per page)
-    const PER_PAGE = 4;
-    for(let i = 0; i < products.length; i += PER_PAGE){
-        const pageProducts = products.slice(i, i + PER_PAGE);
-        let cardsHtml = '';
-        pageProducts.forEach(p => {
-            const colorDots = p.colors.map(c =>
-                `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${c.isWhite ? '#eee' : '#222'};border:2px solid ${c.isWhite ? '#ccc' : '#555'};margin-left:6px" title="${c.title}"></span>`
-            ).join('');
-
-            cardsHtml += `<div style="width:48%;background:#10142a;border:1px solid #282c44;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
-                <div style="height:220px;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(255,255,255,0.02)">
-                    <img src="${p.imgSrc}" style="max-width:180px;max-height:180px;object-fit:contain" crossorigin="anonymous">
-                </div>
-                <div style="padding:14px 18px;flex:1;display:flex;flex-direction:column;gap:6px">
-                    <span style="display:inline-block;width:fit-content;padding:3px 12px;background:rgba(108,92,231,0.2);color:#a29bfe;border-radius:20px;font-size:12px">${p.category}</span>
-                    <div style="font-size:20px;font-weight:700;color:#f0f0f0;line-height:1.3">${p.name}</div>
-                    <div style="font-size:20px;font-weight:700;color:#00b894">${p.price.toLocaleString('en-US')} د.ع</div>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:2px 0">
-                        <span style="font-size:13px;color:#a29bfe;background:rgba(108,92,231,0.1);padding:3px 10px;border-radius:8px">١٠+ قطع: ${p.price10.toLocaleString('en-US')} د.ع (-10%)</span>
-                        <span style="font-size:13px;color:#ffb450;background:rgba(255,180,80,0.1);padding:3px 10px;border-radius:8px">٢٠+ قطعة: ${p.price20.toLocaleString('en-US')} د.ع (-20%)</span>
-                    </div>
-                    <div style="font-size:13px;color:#999;line-height:1.5">${p.desc}</div>
-                    ${p.colors.length ? `<div style="display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:8px"><span style="font-size:12px;color:#888;margin-left:6px">الألوان:</span>${colorDots}</div>` : ''}
-                </div>
-            </div>`;
-        });
-
-        pages.push(`<div dir="rtl" style="width:${PW}px;height:${PH}px;background:#060a14;font-family:${fontFamily};color:#f0f0f0;display:flex;flex-direction:column;position:relative">
-            <div style="height:40px;background:#6c5ce7;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700">SWAYJO — كتالوج المنتجات</div>
-            <div style="flex:1;padding:20px 24px;display:flex;flex-wrap:wrap;gap:20px;align-content:flex-start;justify-content:center">
-                ${cardsHtml}
-            </div>
-            <div style="text-align:center;padding:10px;font-size:12px;color:#555">${Math.floor(i / PER_PAGE) + 2} / ${Math.ceil(products.length / PER_PAGE) + 3}</div>
-        </div>`);
+    // ---- COVER PAGE ----
+    {
+        const { canvas, ctx } = createPageCanvas(PW, PH, SC);
+        fillBg(ctx, PW, PH);
+        // Top line
+        ctx.fillStyle = '#6c5ce7';
+        roundRect(ctx, 30, 30, PW - 60, 5, 3);
+        ctx.fill();
+        // Brand
+        drawTextRTL(ctx, 'SWAYJO', PW/2, PH/2 - 80, `bold 72px ${F}`, '#f0f0f0');
+        drawTextRTL(ctx, 'Smart Home Solutions', PW/2, PH/2 - 20, `22px ${F}`, '#a29bfe');
+        drawTextRTL(ctx, 'كتالوج المنتجات', PW/2, PH/2 + 50, `bold 30px ${F}`, '#cccccc');
+        const dateStr = new Date().toLocaleDateString('ar-IQ', { year:'numeric', month:'long' });
+        drawTextRTL(ctx, dateStr, PW/2, PH/2 + 95, `18px ${F}`, '#888888');
+        // Bottom line
+        ctx.fillStyle = '#6c5ce7';
+        roundRect(ctx, 30, PH - 65, PW - 60, 5, 3);
+        ctx.fill();
+        drawTextRTL(ctx, 'wa.me/9647774823205  |  @swi.cho', PW/2, PH - 35, `14px ${F}`, '#666666');
+        canvases.push(canvas);
     }
 
-    // Discount page
-    pages.push(`<div dir="rtl" style="width:${PW}px;height:${PH}px;background:#060a14;font-family:${fontFamily};color:#f0f0f0;display:flex;flex-direction:column;align-items:center;position:relative">
-        <div style="height:40px;background:#6c5ce7;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700;width:100%">SWAYJO — خصومات الجملة</div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding:40px">
-            <div style="font-size:36px;font-weight:700;margin-bottom:20px">خصومات الجملة</div>
-            <div style="width:500px;background:#10142a;border:2px solid #6c5ce7;border-radius:16px;padding:30px;text-align:center">
-                <div style="font-size:36px;font-weight:700;color:#a29bfe;margin-bottom:8px">خصم 10%</div>
-                <div style="font-size:18px;color:#bbb">عند شراء ١٠ قطع أو أكثر من أي منتج</div>
-            </div>
-            <div style="width:500px;background:#10142a;border:2px solid #ffb450;border-radius:16px;padding:30px;text-align:center">
-                <div style="font-size:36px;font-weight:700;color:#ffb450;margin-bottom:8px">خصم 20% (الحد الأقصى)</div>
-                <div style="font-size:18px;color:#bbb">عند شراء ٢٠ قطعة أو أكثر من أي منتج</div>
-            </div>
-            <div style="margin-top:30px;font-size:16px;color:#888;text-align:center;line-height:2">
-                للطلب بالجملة تواصل معنا عبر واتساب<br>
-                <span style="color:#a29bfe">wa.me/9647774823205</span>
-            </div>
-        </div>
-    </div>`);
+    // ---- PRODUCT PAGES (4 per page, 2x2) ----
+    const PER_PAGE = 4;
+    const totalProdPages = Math.ceil(products.length / PER_PAGE);
+    const totalPages = totalProdPages + 3; // cover + products + discount + back
 
-    // Back cover
-    pages.push(`<div dir="rtl" style="width:${PW}px;height:${PH}px;background:#060a14;font-family:${fontFamily};color:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
-        <div style="width:120px;height:4px;background:#6c5ce7;border-radius:4px;margin-bottom:30px"></div>
-        <div style="font-size:48px;font-weight:700;margin-bottom:10px">SWAYJO</div>
-        <div style="font-size:18px;color:#a29bfe;margin-bottom:50px">Smart Home Solutions</div>
-        <div style="font-size:16px;color:#bbb;line-height:2.2;text-align:center">
-            واتساب: 3205 482 777 964+<br>
-            انستغرام: swi.cho@<br>
-            <span style="font-size:14px;color:#888;margin-top:20px;display:block">Alexa &nbsp;|&nbsp; Google Home &nbsp;|&nbsp; Smart Life</span>
-        </div>
-    </div>`);
+    for(let pg = 0; pg < totalProdPages; pg++){
+        const { canvas, ctx } = createPageCanvas(PW, PH, SC);
+        fillBg(ctx, PW, PH);
 
-    // --- Render all pages ---
-    const elements = pages.map(html => buildCatalogPage(html, PW, PH));
+        // Header bar
+        ctx.fillStyle = '#6c5ce7';
+        ctx.fillRect(0, 0, PW, 40);
+        drawTextRTL(ctx, 'SWAYJO — كتالوج المنتجات', PW/2, 20, `bold 14px ${F}`, '#ffffff');
 
-    // Wait for images to load
-    const allImgs = [];
-    elements.forEach(el => {
-        el.querySelectorAll('img').forEach(img => {
-            if(!img.complete){
-                allImgs.push(new Promise(r => { img.onload = r; img.onerror = r; }));
+        const pageProds = products.slice(pg * PER_PAGE, (pg + 1) * PER_PAGE);
+        const cardW = 360, cardH = 480;
+        const gapX = 30, gapY = 24;
+        const startX = (PW - 2 * cardW - gapX) / 2;
+        const startY = 60;
+
+        for(let i = 0; i < pageProds.length; i++){
+            const p = pageProds[i];
+            const col = i % 2, row = Math.floor(i / 2);
+            const cx = startX + col * (cardW + gapX);
+            const cy = startY + row * (cardH + gapY);
+
+            // Card background
+            ctx.fillStyle = '#10142a';
+            roundRect(ctx, cx, cy, cardW, cardH, 16);
+            ctx.fill();
+            ctx.strokeStyle = '#282c44';
+            ctx.lineWidth = 1;
+            roundRect(ctx, cx, cy, cardW, cardH, 16);
+            ctx.stroke();
+
+            // Image area
+            const imgAreaH = 190;
+            const img = imgMap[p.imgSrc];
+            if(img){
+                const maxImgW = cardW - 40, maxImgH = imgAreaH - 20;
+                let iw = img.naturalWidth, ih = img.naturalHeight;
+                const ratio = Math.min(maxImgW / iw, maxImgH / ih, 1);
+                iw *= ratio; ih *= ratio;
+                const ix = cx + (cardW - iw) / 2;
+                const iy = cy + (imgAreaH - ih) / 2;
+                ctx.drawImage(img, ix, iy, iw, ih);
             }
-        });
+
+            // Text area
+            let ty = cy + imgAreaH + 10;
+            const textX = cx + cardW - 16; // RTL right-aligned
+            const textMaxW = cardW - 32;
+
+            // Category badge
+            if(p.category){
+                ctx.save();
+                const catFont = `12px ${F}`;
+                ctx.font = catFont;
+                ctx.direction = 'rtl';
+                const cw = ctx.measureText(p.category).width + 20;
+                ctx.fillStyle = 'rgba(108,92,231,0.2)';
+                roundRect(ctx, cx + cardW - 16 - cw, ty - 2, cw, 22, 11);
+                ctx.fill();
+                ctx.fillStyle = '#a29bfe';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.fillText(p.category, textX - 10, ty + 2);
+                ctx.restore();
+                ty += 28;
+            }
+
+            // Product name
+            ty = wrapTextRTL(ctx, p.name, textX, ty, textMaxW, 26, `bold 18px ${F}`, '#f0f0f0');
+            ty += 4;
+
+            // Price
+            const priceText = p.price.toLocaleString('en-US') + ' د.ع';
+            drawTextRTL(ctx, priceText, textX, ty + 8, `bold 18px ${F}`, '#00b894', 'right');
+            ty += 30;
+
+            // Discount badges
+            ctx.save();
+            ctx.direction = 'rtl';
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'right';
+
+            // 10% badge
+            const t10 = '١٠+ قطع: ' + p.price10.toLocaleString('en-US') + ' د.ع (-10%)';
+            ctx.font = `12px ${F}`;
+            const w10 = ctx.measureText(t10).width + 16;
+            ctx.fillStyle = 'rgba(108,92,231,0.15)';
+            roundRect(ctx, textX - w10, ty, w10, 22, 8);
+            ctx.fill();
+            ctx.fillStyle = '#a29bfe';
+            ctx.fillText(t10, textX - 8, ty + 4);
+            ty += 26;
+
+            // 20% badge
+            const t20 = '٢٠+ قطعة: ' + p.price20.toLocaleString('en-US') + ' د.ع (-20%)';
+            const w20 = ctx.measureText(t20).width + 16;
+            ctx.fillStyle = 'rgba(255,180,80,0.12)';
+            roundRect(ctx, textX - w20, ty, w20, 22, 8);
+            ctx.fill();
+            ctx.fillStyle = '#ffb450';
+            ctx.fillText(t20, textX - 8, ty + 4);
+            ctx.restore();
+            ty += 28;
+
+            // Description
+            if(p.desc){
+                wrapTextRTL(ctx, p.desc, textX, ty, textMaxW, 18, `12px ${F}`, '#999999');
+            }
+        }
+
+        // Footer
+        const pageNum = `${pg + 2} / ${totalPages}`;
+        drawTextRTL(ctx, pageNum, PW/2, PH - 16, `12px ${F}`, '#555555');
+        canvases.push(canvas);
+    }
+
+    // ---- DISCOUNT PAGE ----
+    {
+        const { canvas, ctx } = createPageCanvas(PW, PH, SC);
+        fillBg(ctx, PW, PH);
+
+        // Header
+        ctx.fillStyle = '#6c5ce7';
+        ctx.fillRect(0, 0, PW, 40);
+        drawTextRTL(ctx, 'SWAYJO — خصومات الجملة', PW/2, 20, `bold 14px ${F}`, '#ffffff');
+
+        drawTextRTL(ctx, 'خصومات الجملة', PW/2, 180, `bold 36px ${F}`, '#f0f0f0');
+
+        // 10% box
+        const bw = 500, bh = 120;
+        const bx = (PW - bw) / 2;
+        ctx.strokeStyle = '#6c5ce7';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = '#10142a';
+        roundRect(ctx, bx, 260, bw, bh, 16);
+        ctx.fill();
+        roundRect(ctx, bx, 260, bw, bh, 16);
+        ctx.stroke();
+        drawTextRTL(ctx, 'خصم 10%', PW/2, 300, `bold 36px ${F}`, '#a29bfe');
+        drawTextRTL(ctx, 'عند شراء ١٠ قطع أو أكثر من أي منتج', PW/2, 345, `18px ${F}`, '#bbbbbb');
+
+        // 20% box
+        ctx.strokeStyle = '#ffb450';
+        ctx.fillStyle = '#10142a';
+        roundRect(ctx, bx, 430, bw, bh, 16);
+        ctx.fill();
+        roundRect(ctx, bx, 430, bw, bh, 16);
+        ctx.stroke();
+        drawTextRTL(ctx, 'خصم 20% (الحد الأقصى)', PW/2, 470, `bold 36px ${F}`, '#ffb450');
+        drawTextRTL(ctx, 'عند شراء ٢٠ قطعة أو أكثر من أي منتج', PW/2, 515, `18px ${F}`, '#bbbbbb');
+
+        drawTextRTL(ctx, 'للطلب بالجملة تواصل معنا عبر واتساب', PW/2, 620, `16px ${F}`, '#888888');
+        drawTextRTL(ctx, 'wa.me/9647774823205', PW/2, 655, `16px ${F}`, '#a29bfe');
+
+        const discPageNum = `${totalProdPages + 2} / ${totalPages}`;
+        drawTextRTL(ctx, discPageNum, PW/2, PH - 16, `12px ${F}`, '#555555');
+        canvases.push(canvas);
+    }
+
+    // ---- BACK COVER ----
+    {
+        const { canvas, ctx } = createPageCanvas(PW, PH, SC);
+        fillBg(ctx, PW, PH);
+
+        ctx.fillStyle = '#6c5ce7';
+        roundRect(ctx, PW/2 - 60, PH/2 - 120, 120, 4, 2);
+        ctx.fill();
+
+        drawTextRTL(ctx, 'SWAYJO', PW/2, PH/2 - 70, `bold 48px ${F}`, '#f0f0f0');
+        drawTextRTL(ctx, 'Smart Home Solutions', PW/2, PH/2 - 25, `18px ${F}`, '#a29bfe');
+
+        drawTextRTL(ctx, 'واتساب: 3205 482 777 964+', PW/2, PH/2 + 50, `16px ${F}`, '#bbbbbb');
+        drawTextRTL(ctx, 'انستغرام: swi.cho@', PW/2, PH/2 + 85, `16px ${F}`, '#bbbbbb');
+        drawTextRTL(ctx, 'Alexa  |  Google Home  |  Smart Life', PW/2, PH/2 + 130, `14px ${F}`, '#888888');
+        canvases.push(canvas);
+    }
+
+    // ---- BUILD PDF ----
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    canvases.forEach((c, idx) => {
+        if(idx > 0) doc.addPage();
+        const imgData = c.toDataURL('image/jpeg', 0.92);
+        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
     });
 
-    Promise.all(allImgs).then(() => {
-        // Small delay to ensure rendering
-        return new Promise(r => setTimeout(r, 300));
-    }).then(() => {
-        // Render pages sequentially
-        const canvasPromises = elements.reduce((chain, el) => {
-            return chain.then(results => {
-                return renderPageToCanvas(el).then(canvas => {
-                    results.push(canvas);
-                    return results;
-                });
-            });
-        }, Promise.resolve([]));
+    doc.save('Swayjo-Catalog.pdf');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
 
-        return canvasPromises;
-    }).then(canvases => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-        canvases.forEach((canvas, idx) => {
-            if(idx > 0) doc.addPage();
-            const imgData = canvas.toDataURL('image/jpeg', 0.92);
-            doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-        });
-
-        doc.save('Swayjo-Catalog.pdf');
-
-        // Cleanup
-        elements.forEach(el => el.remove());
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }).catch(err => {
+    } catch(err) {
         console.error('Catalog error:', err);
-        elements.forEach(el => el.remove());
-        alert('حدث خطأ أثناء إنشاء الكتالوج. يرجى المحاولة مرة أخرى.');
+        alert('حدث خطأ أثناء إنشاء الكتالوج: ' + err.message);
         btn.innerHTML = originalText;
         btn.disabled = false;
-    });
+    }
 }
 
 // -- Smooth Scroll Nav Highlight --
