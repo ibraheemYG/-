@@ -318,6 +318,12 @@ img, svg { max-width: 100%; height: auto; }
     border-color: var(--border-hover);
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
+.product-card.is-sold-out {
+    border-color: rgba(214, 48, 49, 0.35);
+}
+.product-card.is-sold-out:hover {
+    transform: translateY(-3px);
+}
 .card-img {
     position: relative;
     padding: 16px;
@@ -334,6 +340,22 @@ img, svg { max-width: 100%; height: auto; }
     object-fit: contain;
     border-radius: var(--radius-sm);
     transition: var(--transition);
+}
+.stock-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(214, 48, 49, 0.18);
+    border: 1px solid rgba(214, 48, 49, 0.35);
+    color: #ffb4b4;
+    font-size: 0.78rem;
+    font-weight: 700;
+    backdrop-filter: blur(6px);
 }
 .product-card:hover .card-img img { transform: scale(1.05); }
 .card-body {
@@ -385,6 +407,9 @@ img, svg { max-width: 100%; height: auto; }
     border-top: 1px solid var(--border);
     background: rgba(0,0,0,0.15);
 }
+.card-actions.sold-out {
+    justify-content: center;
+}
 .qty-control {
     display: flex;
     align-items: center;
@@ -431,6 +456,26 @@ img, svg { max-width: 100%; height: auto; }
     transition: var(--transition);
 }
 .add-cart-btn:hover { background: #5a4bd1; transform: translateY(-2px); }
+.card-actions.sold-out .sold-out-btn {
+    width: 100%;
+    justify-content: center;
+}
+.sold-out-btn,
+.add-cart-btn.sold-out-btn,
+.btn.sold-out-btn {
+    background: #4b536a !important;
+    color: #eef1f6 !important;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+    transform: none !important;
+}
+.sold-out-note {
+    margin: 6px 0 12px;
+    color: #ffb4a8;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
 
 /* === Catalog Section === */
 .catalog-section {
@@ -496,6 +541,7 @@ img, svg { max-width: 100%; height: auto; }
 .contact-card span { color: var(--muted); font-size: 0.82rem; }
 .whatsapp-card:hover { border-color: #25D366; box-shadow: 0 8px 30px rgba(37,211,102,0.15); }
 .instagram-card:hover { border-color: #e1306c; box-shadow: 0 8px 30px rgba(225,48,108,0.15); }
+.facebook-card:hover { border-color: #1877f2; box-shadow: 0 8px 30px rgba(24,119,242,0.18); }
 
 /* === Footer === */
 footer {

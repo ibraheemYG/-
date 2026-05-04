@@ -12,6 +12,27 @@ function updateHeaderCountUI(){
     if(el) el.textContent = cartTotalCount();
 }
 function formatCurrency(n){ return Number(n).toLocaleString('en-US') + ' د.ع'; }
+function isOutOfStockCard(card){ return Boolean(card && card.dataset.stock === 'out'); }
+function initStockState(){
+    document.querySelectorAll('.product-card').forEach(card => {
+        if(!isOutOfStockCard(card)) return;
+        card.classList.add('is-sold-out');
+
+        const imgWrap = card.querySelector('.card-img');
+        if(imgWrap && !imgWrap.querySelector('.stock-badge')){
+            const badge = document.createElement('span');
+            badge.className = 'stock-badge';
+            badge.textContent = 'نفدت الكمية';
+            imgWrap.appendChild(badge);
+        }
+
+        const actions = card.querySelector('.card-actions');
+        if(actions && !actions.classList.contains('sold-out')){
+            actions.classList.add('sold-out');
+            actions.innerHTML = '<button class="add-cart-btn sold-out-btn" type="button" disabled>نفدت الكمية</button>';
+        }
+    });
+}
 
 // -- Cart Modal --
 function openCartModal(){
@@ -194,6 +215,7 @@ function openProductModal(card){
     const desc = card.dataset.description || '';
     const id = card.dataset.id;
     const priceVal = card.dataset.price;
+    const soldOut = isOutOfStockCard(card);
 
     let colorsBlock = '';
     const dots = card.querySelectorAll('.color-dot');
@@ -216,7 +238,7 @@ function openProductModal(card){
                 <span class="price">${price}</span>
                 <p>${desc}</p>
                 ${colorsBlock}
-                <button class="btn btn-primary" id="modal-add-btn" style="width:100%">إضافة للعربة</button>
+                ${soldOut ? '<div class="sold-out-note">هذا المنتج غير متوفر حالياً.</div><button class="btn btn-primary sold-out-btn" type="button" disabled style="width:100%">نفدت الكمية</button>' : '<button class="btn btn-primary" id="modal-add-btn" style="width:100%">إضافة للعربة</button>'}
             </div>
         </div>
     `;
@@ -235,17 +257,19 @@ function openProductModal(card){
         modalColors.forEach(d => d.addEventListener('click', () => { selectedColor = d.title; updateSel(); }));
     }
 
-    content.querySelector('#modal-add-btn').addEventListener('click', () => {
-        const cart = getCart();
-        const existing = cart.find(i => i.id === id && i.color === selectedColor);
-        if(existing){ existing.qty += 1; }
-        else { cart.push({ id, name: title, price: Number(priceVal), qty: 1, img, color: selectedColor }); }
-        saveCart(cart);
-        updateHeaderCountUI();
-        closeProductModal();
-        const badge = document.getElementById('cart-count');
-        if(badge) badge.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 300 });
-    });
+    if(!soldOut){
+        content.querySelector('#modal-add-btn').addEventListener('click', () => {
+            const cart = getCart();
+            const existing = cart.find(i => i.id === id && i.color === selectedColor);
+            if(existing){ existing.qty += 1; }
+            else { cart.push({ id, name: title, price: Number(priceVal), qty: 1, img, color: selectedColor }); }
+            saveCart(cart);
+            updateHeaderCountUI();
+            closeProductModal();
+            const badge = document.getElementById('cart-count');
+            if(badge) badge.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 300 });
+        });
+    }
 
     overlay.classList.add('open');
     modal.classList.add('open');
@@ -382,6 +406,7 @@ async function generateCatalog(){
             price20: Math.round(price * 0.8),
             desc: card.dataset.description || '',
             category: card.querySelector('.card-category')?.textContent || '',
+            soldOut: card.dataset.stock === 'out',
             imgSrc: imgEl ? imgEl.src : '',
             imgEl: imgEl
         };
@@ -501,6 +526,23 @@ async function generateCatalog(){
             drawTextRTL(ctx, priceText, textX, ty + 8, `bold 18px ${F}`, '#00b894', 'right');
             ty += 30;
 
+            if(p.soldOut){
+                ctx.save();
+                const soldText = 'نفدت الكمية';
+                ctx.font = `bold 12px ${F}`;
+                ctx.direction = 'rtl';
+                const soldW = ctx.measureText(soldText).width + 18;
+                ctx.fillStyle = 'rgba(214,48,49,0.18)';
+                roundRect(ctx, textX - soldW, ty, soldW, 22, 8);
+                ctx.fill();
+                ctx.fillStyle = '#ff7675';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.fillText(soldText, textX - 9, ty + 4);
+                ctx.restore();
+                ty += 28;
+            }
+
             // Discount badges
             ctx.save();
             ctx.direction = 'rtl';
@@ -576,8 +618,9 @@ async function generateCatalog(){
         drawTextRTL(ctx, 'خصم 20% (الحد الأقصى)', PW/2, 470, `bold 36px ${F}`, '#ffb450');
         drawTextRTL(ctx, 'عند شراء ٢٠ قطعة أو أكثر من أي منتج', PW/2, 515, `18px ${F}`, '#bbbbbb');
 
-        drawTextRTL(ctx, 'للطلب بالجملة تواصل معنا عبر واتساب', PW/2, 620, `16px ${F}`, '#888888');
-        drawTextRTL(ctx, 'wa.me/9647774823205', PW/2, 655, `16px ${F}`, '#a29bfe');
+        drawTextRTL(ctx, 'للطلب بالجملة تواصل معنا عبر واتساب أو فيسبوك', PW/2, 610, `16px ${F}`, '#888888');
+        drawTextRTL(ctx, 'wa.me/9647774823205', PW/2, 645, `16px ${F}`, '#a29bfe');
+        drawTextRTL(ctx, 'facebook.com/61565971287315', PW/2, 680, `15px ${F}`, '#7db0ff');
 
         const discPageNum = `${totalProdPages + 2} / ${totalPages}`;
         drawTextRTL(ctx, discPageNum, PW/2, PH - 16, `12px ${F}`, '#555555');
@@ -596,9 +639,10 @@ async function generateCatalog(){
         drawTextRTL(ctx, 'SWAYJO', PW/2, PH/2 - 70, `bold 48px ${F}`, '#f0f0f0');
         drawTextRTL(ctx, 'Smart Home Solutions', PW/2, PH/2 - 25, `18px ${F}`, '#a29bfe');
 
-        drawTextRTL(ctx, 'واتساب: 3205 482 777 964+', PW/2, PH/2 + 50, `16px ${F}`, '#bbbbbb');
-        drawTextRTL(ctx, 'انستغرام: swi.cho@', PW/2, PH/2 + 85, `16px ${F}`, '#bbbbbb');
-        drawTextRTL(ctx, 'Alexa  |  Google Home  |  Smart Life', PW/2, PH/2 + 130, `14px ${F}`, '#888888');
+        drawTextRTL(ctx, 'واتساب: 3205 482 777 964+', PW/2, PH/2 + 45, `16px ${F}`, '#bbbbbb');
+        drawTextRTL(ctx, 'انستغرام: @swi.cho', PW/2, PH/2 + 80, `16px ${F}`, '#bbbbbb');
+        drawTextRTL(ctx, 'فيسبوك: facebook.com/61565971287315', PW/2, PH/2 + 115, `15px ${F}`, '#7db0ff');
+        drawTextRTL(ctx, 'Alexa  |  Google Home  |  Smart Life', PW/2, PH/2 + 160, `14px ${F}`, '#888888');
         canvases.push(canvas);
     }
 
@@ -659,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initCategories();
     initNavHighlight();
+    initStockState();
 
     // Mobile menu
     const menuBtn = document.getElementById('mobile-menu-btn');
@@ -689,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(btn){
                 const card = btn.closest('.product-card');
                 if(!card) return;
+                if(isOutOfStockCard(card)) return;
                 const qtyEl = card.querySelector('[data-qty]');
                 let qty = Number(qtyEl?.textContent) || 1;
 
