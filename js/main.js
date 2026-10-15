@@ -12,6 +12,23 @@ function updateHeaderCountUI(){
     if(el) el.textContent = cartTotalCount();
 }
 function formatCurrency(n){ return Number(n).toLocaleString('en-US') + ' د.ع'; }
+
+// -- Discount Code --
+const COUPONS = { BRHM: { amount: 1000, minTotal: 25000 } };
+function normalizeCoupon(code){ return String(code || '').trim().toUpperCase(); }
+function getCoupon(){
+    try { const c = localStorage.getItem('swayjat_coupon') || ''; return COUPONS[c] ? c : ''; }
+    catch { return ''; }
+}
+function setCoupon(code){
+    try { code ? localStorage.setItem('swayjat_coupon', code) : localStorage.removeItem('swayjat_coupon'); }
+    catch {}
+}
+// Discount applies only when the products total is strictly above the minimum
+function couponDiscount(total, code){
+    const c = COUPONS[code];
+    return c && total > c.minTotal ? c.amount : 0;
+}
 function isOutOfStockCard(card){ return Boolean(card && card.dataset.stock === 'out'); }
 function initStockState(){
     document.querySelectorAll('.product-card').forEach(card => {
@@ -77,10 +94,62 @@ function renderCartModal(){
         root.appendChild(row);
     });
 
+    const code = getCoupon();
+    const discount = couponDiscount(total, code);
+    const coupon = document.createElement('div');
+    coupon.className = 'coupon-box';
+    if(code){
+        const rule = COUPONS[code];
+        const remaining = rule.minTotal - total;
+        const progress = Math.min(100, Math.round(total / rule.minTotal * 100));
+        coupon.innerHTML = `
+            <div class="coupon-applied">
+                <span class="coupon-gift">🎁</span>
+                <div class="coupon-text">كود <strong>${code}</strong> مفعّل</div>
+                <button class="coupon-remove" type="button" title="إزالة الكود" aria-label="إزالة الكود">✕</button>
+            </div>
+            ${discount
+                ? `<div class="coupon-note success">مبروك! وفّرت ${formatCurrency(discount)} على طلبك ✨</div>`
+                : `<div class="coupon-note">أضف منتجات بقيمة أكثر من ${formatCurrency(remaining)} ليتفعّل خصم ${formatCurrency(rule.amount)}</div>
+                   <div class="coupon-progress"><span style="width:${progress}%"></span></div>`}
+        `;
+    } else {
+        coupon.innerHTML = `
+            <div class="coupon-form">
+                <input type="text" id="coupon-input" placeholder="عندك كود خصم؟" autocomplete="off" aria-label="كود الخصم">
+                <button id="coupon-apply" class="btn btn-outline" type="button">تطبيق</button>
+            </div>
+            <div id="coupon-error" class="coupon-note error" hidden></div>
+        `;
+    }
+    root.appendChild(coupon);
+
     const summary = document.createElement('div');
     summary.className = 'cart-summary-modal';
-    summary.innerHTML = `<div>الإجمالي: <strong>${formatCurrency(total)}</strong></div><div><button id="modal-checkout" class="btn btn-primary" style="padding:10px 24px">إتمام الطلب</button></div>`;
+    summary.innerHTML = `
+        <div class="summary-lines">
+            ${discount ? `<div class="summary-line"><span>المجموع</span><span>${formatCurrency(total)}</span></div>
+            <div class="summary-line discount"><span>خصم ${code}</span><span><span dir="ltr">-${Number(discount).toLocaleString('en-US')}</span> د.ع</span></div>` : ''}
+            <div>الإجمالي: <strong>${formatCurrency(total - discount)}</strong></div>
+        </div>
+        <div><button id="modal-checkout" class="btn btn-primary" style="padding:10px 24px">إتمام الطلب</button></div>`;
     root.appendChild(summary);
+
+    coupon.querySelector('.coupon-remove')?.addEventListener('click', () => { setCoupon(''); renderCartModal(); });
+    const couponInput = coupon.querySelector('#coupon-input');
+    const applyCoupon = () => {
+        const entered = normalizeCoupon(couponInput.value);
+        const errEl = coupon.querySelector('#coupon-error');
+        if(!COUPONS[entered]){
+            errEl.textContent = entered ? 'الكود غير صحيح' : 'اكتب كود الخصم أولاً';
+            errEl.hidden = false;
+            return;
+        }
+        setCoupon(entered);
+        renderCartModal();
+    };
+    coupon.querySelector('#coupon-apply')?.addEventListener('click', applyCoupon);
+    couponInput?.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); applyCoupon(); } });
 
     // Handlers
     root.querySelectorAll('.ci-increase').forEach(b => {
@@ -195,7 +264,11 @@ function showCheckoutForm(){
             const c = it.color ? ` (${it.color})` : '';
             lines.push(`- ${it.name}${c} × ${it.qty} = ${formatCurrency(sub)}`);
         });
-        lines.push('---', 'المنتجات: ' + formatCurrency(total), 'التوصيل: ' + formatCurrency(deliveryFee), 'الإجمالي: ' + formatCurrency(total + deliveryFee));
+        const code = getCoupon();
+        const discount = couponDiscount(total, code);
+        lines.push('---', 'المنتجات: ' + formatCurrency(total));
+        if(discount) lines.push(`كود الخصم (${code}): −${formatCurrency(discount)}`);
+        lines.push('التوصيل: ' + formatCurrency(deliveryFee), 'الإجمالي: ' + formatCurrency(total - discount + deliveryFee));
 
         window.open(`https://wa.me/${WHATSAPP_RECIPIENT_INTL}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
         closeCartModal();
@@ -722,6 +795,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('header-cart-btn')?.addEventListener('click', openCartModal);
     document.getElementById('cart-overlay')?.addEventListener('click', closeCartModal);
     document.getElementById('cart-close')?.addEventListener('click', closeCartModal);
+
+    // Gift banner: copy + activate the discount code
+    document.querySelectorAll('[data-copy-coupon]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const code = btn.dataset.copyCoupon;
+            setCoupon(code);
+            navigator.clipboard?.writeText(code).catch(() => {});
+            const label = btn.querySelector('.gift-btn-label');
+            if(label){
+                label.textContent = 'تم تفعيل الكود ✓';
+                btn.classList.add('done');
+                setTimeout(() => { label.textContent = 'انسخ الكود وفعّله'; btn.classList.remove('done'); }, 2500);
+            }
+        });
+    });
 
     // Catalog download
     document.getElementById('download-catalog')?.addEventListener('click', generateCatalog);
