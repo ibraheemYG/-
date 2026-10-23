@@ -357,6 +357,26 @@ img, svg { max-width: 100%; height: auto; }
     font-weight: 700;
     backdrop-filter: blur(6px);
 }
+.sale-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffd36e, #e17055);
+    color: #1a1206;
+    font-size: 0.78rem;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(225,112,85,0.35);
+}
+.old-price {
+    color: var(--muted);
+    font-size: 0.75em;
+    font-weight: 400;
+    text-decoration-color: #e17055;
+    margin-left: 4px;
+}
 .product-card:hover .card-img img { transform: scale(1.05); }
 .card-body {
     padding: 0 16px 12px;

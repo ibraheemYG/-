@@ -252,7 +252,7 @@ function showCheckoutForm(){
         const cart = getCart();
         if(!cart.length){ errEl.textContent = 'العربة فارغة'; return; }
 
-        const deliveryFee = gov === 'Baghdad' ? 5000 : 6000;
+        const deliveryFee = 5000;
         let lines = ['طلب من متجر سويجو'];
         if(name) lines.push('الاسم: ' + name);
         lines.push('المحافظة: ' + govName, 'العنوان: ' + address, 'الهاتف: ' + phone, '---', 'المنتجات:');
@@ -284,7 +284,7 @@ function openProductModal(card){
 
     const img = card.querySelector('img').src;
     const title = card.querySelector('h3').textContent;
-    const price = card.querySelector('.price').textContent;
+    const price = card.querySelector('.price').innerHTML;
     const desc = card.dataset.description || '';
     const id = card.dataset.id;
     const priceVal = card.dataset.price;
