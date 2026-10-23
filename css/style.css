@@ -6,6 +6,13 @@
     font-style: normal;
     font-display: swap;
 }
+/* The Arabic font draws Latin letters incorrectly (e.g. "Hub" shows as "Hvb"), so render A-Z/a-z with a system font */
+@font-face {
+    font-family: 'Latin Letters';
+    src: local('Segoe UI Bold'), local('SegoeUI-Bold'), local('Roboto Bold'), local('Roboto-Bold'), local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), local('Arial Bold'), local('Arial-BoldMT');
+    font-weight: 700;
+    unicode-range: U+0041-005A, U+0061-007A;
+}
 
 :root {
     --bg: #060a14;
@@ -33,7 +40,7 @@ html {
 }
 
 body {
-    font-family: 'VIP Hala Bold', system-ui, 'Segoe UI', Tahoma, sans-serif;
+    font-family: 'Latin Letters', 'VIP Hala Bold', system-ui, 'Segoe UI', Tahoma, sans-serif;
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
